@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Ultimate Hub</title>
+    <style>
+        :root {
+            --bg: #080808;
+            --s1: #111;
+            --s2: #1a1a1a;
+            --s3: #242424;
+            --acc: #ff2d2d;
+            --acc2: #ff6a00;
+            --text: #f0f0f0;
+            --muted: #666;
+            --border: #222;
+            --st: env(safe-area-inset-top);
+            --sb: env(safe-area-inset-bottom);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif; overflow-x:hidden; }
+
+        /* HEADER */
+        .hdr {
+            position:fixed; top:0; left:0; right:0; z-index:200;
+            background:rgba(8,8,8,0.95);
+            backdrop-filter:blur(24px);
+            -webkit-backdrop-filter:blur(24px);
+            padding-top:calc(var(--st) + 10px);
+            padding-bottom:10px;
+            border-bottom:1px solid var(--border);
+        }
+        .hdr-row1 { display:flex; align-items:center; gap:10px; padding:0 14px 10px; }
+        .logo {
+            font-size:1.3rem; font-weight:900; letter-spacing:-1px; flex-shrink:0;
+            background:linear-gradient(135deg,var(--acc),var(--acc2));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+        }
+        .search-box {
+            flex:1; position:relative;
+        }
+        .search-box input {
+            width:100%; background:var(--s2); border:1.5px solid var(--border);
+            border-radius:12px; padding:10px 36px 10px 14px;
+            color:var(--text); font-size:0.92rem; outline:none;
+            -webkit-appearance:none; transition:border-color 0.2s;
+        }
+        .search-box input:focus { border-color:var(--acc); }
+        .search-box input::placeholder { color:var(--muted); }
+        .clr-btn {
+            position:absolute; right:8px; top:50%; transform:translateY(-50%);
+            background:var(--muted); border:none; color:#000;
+            width:18px; height:18px; border-radius:50%;
+            font-size:10px; font-weight:800; cursor:pointer;
+            display:none; align-items:center; justify-content:center;
+        }
+
+        /* SITE TABS */
+        .site-tabs {
+            display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+            scrollbar-width:none; padding:0 14px;
+        }
+        .site-tabs::-webkit-scrollbar { display:none; }
+        .stab {
+            flex-shrink:0; display:flex; align-items:center; gap:5px;
+            padding:6px 12px; border-radius:20px;
+            border:1.5px solid var(--border); background:var(--s2);
+            color:var(--muted); font-size:0.75rem; font-weight:700;
+            cursor:pointer; transition:all 0.18s; white-space:nowrap;
+        }
+        .stab.active { border-color:var(--acc); background:var(--acc); color:#fff; }
+        .stab-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+        /* MAIN */
+        .main { padding-top:118px; padding-bottom:calc(var(--sb) + 24px); }
+
+        /* SEARCH HEADER BAR */
+        .search-bar {
+            display:none; align-items:center; justify-content:space-between;
+            padding:10px 14px; background:var(--s1); border-bottom:1px solid var(--border);
+        }
+        .search-bar.show { display:flex; }
+        .search-bar-text { font-size:0.8rem; color:var(--muted); }
+        .search-bar-text strong { color:var(--text); }
+
+        /* OPEN ALL BTN */
+        .open-all {
+            margin:14px; border-radius:14px; overflow:hidden;
+            display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border);
+        }
+        .open-btn {
+            display:block; padding:13px 10px; text-align:center;
+            background:var(--s2); color:var(--text);
+            font-size:0.78rem; font-weight:700; text-decoration:none;
+            cursor:pointer; border:none; transition:background 0.15s;
+        }
+        .open-btn:active { background:var(--s3); }
+        .open-btn .dot { display:block; font-size:1rem; margin-bottom:2px; }
+        .open-btn.primary {
+            grid-column:1/-1; background:linear-gradient(135deg,var(--acc),var(--acc2));
+            font-size:0.9rem; padding:15px;
+        }
+
+        /* SECTION LABEL */
+        .sec-label {
+            font-size:0.65rem; font-weight:800; letter-spacing:1.5px;
+            text-transform:uppercase; color:var(--muted);
+            padding:16px 14px 8px;
+        }
+
+        /* VIDEO GRID */
+        .vgrid {
+            display:grid; grid-template-columns:1fr 1fr;
+            gap:8px; padding:0 10px;
+        }
+        .vcard {
+            background:var(--s1); border-radius:10px; overflow:hidden;
+            border:1px solid var(--border); text-decoration:none; display:block;
+            transition:transform 0.12s;
+        }
+        .vcard:active { transform:scale(0.95); }
+        .vthumb {
+            width:100%; aspect-ratio:16/9; background:var(--s2);
+            position:relative; display:flex; align-items:center; justify-content:center;
+            font-size:2rem; overflow:hidden;
+        }
+        .vthumb-grad {
+            position:absolute; inset:0;
+            background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+        }
+        .vplay {
+            position:absolute;
+            width:36px; height:36px; border-radius:50%;
+            background:rgba(255,45,45,0.88);
+            display:flex; align-items:center; justify-content:center;
+            font-size:13px; padding-left:2px; color:#fff;
+        }
+        .vdur {
+            position:absolute; bottom:5px; right:6px;
+            background:rgba(0,0,0,0.82); color:#fff;
+            font-size:0.6rem; font-weight:700; padding:2px 5px; border-radius:4px;
+        }
+        .vsite-badge {
+            position:absolute; top:5px; left:5px;
+            font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px;
+        }
+        .vinfo { padding:8px 9px 10px; }
+        .vtitle {
+            font-size:0.76rem; font-weight:600; line-height:1.35; color:#ddd;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+            margin-bottom:3px;
+        }
+        .vmeta { font-size:0.65rem; color:var(--muted); }
+
+        /* SEARCH RESULTS MODE */
+        .search-results-grid {
+            display:none; flex-direction:column; gap:0;
+        }
+        .search-results-grid.show { display:flex; }
+        .sresult {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 14px; border-bottom:1px solid var(--border);
+            text-decoration:none; color:var(--text); cursor:pointer;
+            transition:background 0.12s;
+        }
+        .sresult:active { background:var(--s2); }
+        .sresult-icon {
+            width:44px; height:44px; border-radius:10px; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.3rem;
+        }
+        .sresult-info { flex:1; min-width:0; }
+        .sresult-name { font-size:0.88rem; font-weight:700; margin-bottom:2px; }
+        .sresult-desc { font-size:0.72rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sresult-arrow { color:var(--muted); font-size:0.9rem; }
+
+        /* NO RESULTS */
+        .no-res { display:none; text-align:center; padding:50px 20px; color:var(--muted); }
+        .no-res.show { display:block; }
+        .no-res p { font-size:0.9rem; margin-top:8px; }
+
+        /* CATEGORY CHIPS */
+        .cats {
+            display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+            scrollbar-width:none; padding:0 14px 14px;
+        }
+        .cats::-webkit-scrollbar { display:none; }
+        .cat {
+            flex-shrink:0; padding:7px 14px; border-radius:20px;
+            background:var(--s2); border:1px solid var(--border);
+            color:var(--muted); font-size:0.75rem; font-weight:600;
+            cursor:pointer; transition:all 0.15s;
+        }
+        .cat:active { background:var(--s3); color:var(--text); }
+
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:calc(var(--sb) + 20px); left:50%; transform:translateX(-50%) translateY(20px);
+            background:var(--s3); color:var(--text); padding:10px 20px;
+            border-radius:20px; font-size:0.8rem; font-weight:600;
+            opacity:0; transition:all 0.3s; z-index:999; white-space:nowrap;
+            border:1px solid var(--border);
+        }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<header class="hdr">
+    <div class="hdr-row1">
+        <div class="logo">HUB</div>
+        <div class="search-box">
+            <input type="search" id="si" placeholder="Søg videoer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button class="clr-btn" id="clrBtn">✕</button>
+        </div>
+    </div>
+    <div class="site-tabs" id="siteTabs"></div>
+</header>
+
+<main class="main">
+
+    <div class="search-bar" id="searchBar">
+        <div class="search-bar-text">Resultater for: <strong id="sqLabel"></strong></div>
+        <div style="font-size:0.72rem;color:var(--muted)" id="sqCount"></div>
+    </div>
+
+    <!-- DEFAULT VIEW -->
+    <div id="defaultView">
+        <div class="sec-label">Åbn site direkte</div>
+        <div class="open-all" id="openAllGrid"></div>
+
+        <div class="sec-label">Kategorier</div>
+        <div class="cats" id="catsRow"></div>
+
+        <div class="sec-label">Udvalgte</div>
+        <div class="vgrid" id="vGrid"></div>
+    </div>
+
+    <!-- SEARCH RESULTS VIEW -->
+    <div class="search-results-grid" id="searchView"></div>
+
+    <div class="no-res" id="noRes">
+        <div style="font-size:2.5rem">🔍</div>
+        <p>Ingen resultater for den søgning.</p>
+    </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SITES = [
+    { id:"pornhub",   name:"Pornhub",   emoji:"🔥", color:"#ff9900", bg:"#1a1100", badge:"PH", badgeColor:"#ff9900",
+      url:"https://www.pornhub.com", search:"https://www.pornhub.com/video/search?search=", cat:"https://www.pornhub.com/categories" },
+    { id:"xvideos",   name:"XVideos",   emoji:"🎬", color:"#cc0000", bg:"#1a0000", badge:"XV", badgeColor:"#cc0000",
+      url:"https://www.xvideos.com", search:"https://www.xvideos.com/?k=", cat:"https://www.xvideos.com/c/" },
+    { id:"xhamster",  name:"xHamster",  emoji:"🐹", color:"#ff6600", bg:"#1a0d00", badge:"XH", badgeColor:"#ff6600",
+      url:"https://xhamster.com", search:"https://xhamster.com/search/", cat:"https://xhamster.com/categories" },
+    { id:"redtube",   name:"RedTube",   emoji:"🔴", color:"#e2001a", bg:"#1a0003", badge:"RT", badgeColor:"#e2001a",
+      url:"https://www.redtube.com", search:"https://www.redtube.com/?search=", cat:"https://www.redtube.com/categories" },
+    { id:"youporn",   name:"YouPorn",   emoji:"🎭", color:"#aaa",    bg:"#111",    badge:"YP", badgeColor:"#555",
+      url:"https://www.youporn.com", search:"https://www.youporn.com/search/video/?query=", cat:"https://www.youporn.com/categories/" },
+    { id:"spankbang", name:"SpankBang", emoji:"💥", color:"#ff3f3f", bg:"#1a0000", badge:"SB", badgeColor:"#ff3f3f",
+      url:"https://spankbang.com", search:"https://spankbang.com/s/", cat:"https://spankbang.com/tags/" },
+    { id:"tube8",     name:"Tube8",     emoji:"8️⃣", color:"#0099cc", bg:"#001018", badge:"T8", badgeColor:"#0099cc",
+      url:"https://www.tube8.com", search:"https://www.tube8.com/video/search/?search=", cat:"https://www.tube8.com/categories/" },
+    { id:"eporner",   name:"ePorner",   emoji:"🎥", color:"#ff5500", bg:"#1a0b00", badge:"EP", badgeColor:"#ff5500",
+      url:"https://www.eporner.com", search:"https://www.eporner.com/search/", cat:"https://www.eporner.com/categories/" },
+    { id:"beeg",      name:"Beeg",      emoji:"🐝", color:"#f5a623", bg:"#1a1000", badge:"BG", badgeColor:"#f5a623",
+      url:"https://beeg.com", search:"https://beeg.com/index.php#q=", cat:"https://beeg.com" },
+    { id:"txxx",      name:"Txxx",      emoji:"🟠", color:"#ff7700", bg:"#1a0e00", badge:"TX", badgeColor:"#ff7700",
+      url:"https://www.txxx.com", search:"https://www.txxx.com/search/", cat:"https://www.txxx.com/categories/" },
+    { id:"hclips",    name:"HClips",    emoji:"📎", color:"#00aaff", bg:"#001018", badge:"HC", badgeColor:"#00aaff",
+      url:"https://hclips.com", search:"https://hclips.com/search/", cat:"https://hclips.com/categories/" },
+    { id:"porntrex",  name:"Porntrex",  emoji:"🟣", color:"#9b59b6", bg:"#0d0018", badge:"PT", badgeColor:"#9b59b6",
+      url:"https://www.porntrex.com", search:"https://www.porntrex.com/search/", cat:"https://www.porntrex.com/categories/" },
+];
+
+const CATEGORIES = ["Amateur","Anal","Asian","BBW","BDSM","Blonde","Brunette","Casting","Celebrity","Compilation","Creampie","Cumshot","Danish","Double","Ebony","Facial","Fetish","Gangbang","German","Group","Hardcore","HD","Homemade","Indian","Interracial","Japanese","Latina","Lesbian","MILF","Massage","Mature","Natural","Orgasm","POV","Public","Reality","Redhead","Rough","Shemale","Skinny","Solo","Squirt","Step","Stockings","Strapon","Strip","Swinger","Teen","Threesome","Toys"];
+
+const DUMMY = [
+    {title:"Populær scene 4K", site:"pornhub", dur:"12:34", views:"2.3M", tags:["HD","Popular"]},
+    {title:"Amateur hjemmelavet", site:"xvideos", dur:"8:22", views:"1.1M", tags:["Amateur"]},
+    {title:"Moden kvinde scene", site:"xhamster", dur:"22:10", views:"890K", tags:["MILF","Mature"]},
+    {title:"Ny upload i dag", site:"redtube", dur:"6:45", views:"340K", tags:["New"]},
+    {title:"POV favorit scene", site:"youporn", dur:"15:08", views:"1.5M", tags:["POV"]},
+    {title:"Lang session 4K", site:"spankbang", dur:"28:33", views:"760K", tags:["HD","Long"]},
+    {title:"Trending nu", site:"tube8", dur:"9:55", views:"3.1M", tags:["Popular"]},
+    {title:"Casting session", site:"eporner", dur:"11:20", views:"120K", tags:["Casting"]},
+    {title:"Lesbisk top rated", site:"beeg", dur:"19:44", views:"540K", tags:["Lesbian"]},
+    {title:"Gruppe scene", site:"txxx", dur:"31:12", views:"4.2M", tags:["Group"]},
+    {title:"Teen scene HD", site:"hclips", dur:"7:30", views:"670K", tags:["Teen","HD"]},
+    {title:"Hardcore compilation", site:"porntrex", dur:"45:00", views:"210K", tags:["Hardcore","Compilation"]},
+];
+
+let activeSite = "all";
+let searchQ = "";
+
+// BUILD SITE TABS
+const tabsEl = document.getElementById("siteTabs");
+const allTab = document.createElement("div");
+allTab.className = "stab active";
+allTab.dataset.site = "all";
+allTab.innerHTML = `<span class="stab-dot" style="background:linear-gradient(135deg,#ff2d2d,#ff6a00)"></span>Alle`;
+tabsEl.appendChild(allTab);
+SITES.forEach(s => {
+    const t = document.createElement("div");
+    t.className = "stab";
+    t.dataset.site = s.id;
+    t.innerHTML = `<span class="stab-dot" style="background:${s.color}"></span>${s.name}`;
+    tabsEl.appendChild(t);
+});
+
+tabsEl.querySelectorAll(".stab").forEach(t => {
+    t.addEventListener("click", () => {
+        tabsEl.querySelectorAll(".stab").forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        activeSite = t.dataset.site;
+        if (searchQ.trim()) {
+            doSearch(searchQ);
+        } else {
+            renderDefault();
+        }
+    });
+});
+
+// BUILD OPEN-ALL GRID
+const openGrid = document.getElementById("openAllGrid");
+const primaryBtn = document.createElement("a");
+primaryBtn.className = "open-btn primary";
+primaryBtn.href = "https://www.pornhub.com";
+primaryBtn.target = "_blank";
+primaryBtn.rel = "noopener noreferrer";
+primaryBtn.textContent = "Åbn Pornhub nu";
+openGrid.appendChild(primaryBtn);
+SITES.slice(1).forEach(s => {
+    const b = document.createElement("a");
+    b.className = "open-btn";
+    b.href = s.url;
+    b.target = "_blank";
+    b.rel = "noopener noreferrer";
+    b.innerHTML = `<span class="dot">${s.emoji}</span>${s.name}`;
+    openGrid.appendChild(b);
+});
+
+// BUILD CATEGORIES
+const catsEl = document.getElementById("catsRow");
+CATEGORIES.forEach(c => {
+    const chip = document.createElement("div");
+    chip.className = "cat";
+    chip.textContent = c;
+    chip.addEventListener("click", () => {
+        const q = c;
+        document.getElementById("si").value = q;
+        searchQ = q;
+        doSearch(q);
+    });
+    catsEl.appendChild(chip);
+});
+
+// BUILD VIDEO CARDS
+function renderDefault() {
+    document.getElementById("defaultView").style.display = "block";
+    document.getElementById("searchView").classList.remove("show");
+    document.getElementById("noRes").classList.remove("show");
+    document.getElementById("searchBar").classList.remove("show");
+
+    const filtered = activeSite === "all" ? DUMMY : DUMMY.filter(v => v.site === activeSite);
+    const grid = document.getElementById("vGrid");
+    grid.innerHTML = "";
+    filtered.forEach(v => {
+        const s = SITES.find(x => x.id === v.site);
+        const card = document.createElement("a");
+        card.className = "vcard";
+        card.href = s.url;
+        card.target = "_blank";
+        card.rel = "noopener noreferrer";
+        card.innerHTML = `
+            <div class="vthumb" style="background:${s.bg}">
+                <span>${s.emoji}</span>
+                <div class="vthumb-grad"></div>
+                <div class="vplay">▶</div>
+                <div class="vdur">${v.dur}</div>
+                <div class="vsite-badge" style="background:${s.badgeColor};color:#fff">${s.badge}</div>
+            </div>
+            <div class="vinfo">
+                <div class="vtitle">${v.title}</div>
+                <div class="vmeta">${v.views} visninger</div>
+            </div>`;
+        grid.appendChild(card);
+    });
+
+    // Update primary open button
+    if (activeSite !== "all") {
+        const s = SITES.find(x => x.id === activeSite);
+        primaryBtn.textContent = `Åbn ${s.name} nu`;
+        primaryBtn.href = s.url;
+    } else {
+        primaryBtn.textContent = "Åbn Pornhub nu";
+        primaryBtn.href = "https://www.pornhub.com";
+    }
+}
+
+// SEARCH
+function doSearch(q) {
+    if (!q.trim()) { renderDefault(); return; }
+
+    document.getElementById("defaultView").style.display = "none";
+    const sv = document.getElementById("searchView");
+    const nr = document.getElementById("noRes");
+    const sb = document.getElementById("searchBar");
+    sv.innerHTML = "";
+    nr.classList.remove("show");
+    sb.classList.add("show");
+    document.getElementById("sqLabel").textContent = q;
+
+    const sitesToSearch = activeSite === "all" ? SITES : SITES.filter(s => s.id === activeSite);
+    document.getElementById("sqCount").textContent = sitesToSearch.length + " sites";
+
+    sitesToSearch.forEach(s => {
+        const url = s.search + encodeURIComponent(q);
+        const row = document.createElement("a");
+        row.className = "sresult";
+        row.href = url;
+        row.target = "_blank";
+        row.rel = "noopener noreferrer";
+        row.innerHTML = `
+            <div class="sresult-icon" style="background:${s.bg}">${s.emoji}</div>
+            <div class="sresult-info">
+                <div class="sresult-name">${s.name}</div>
+                <div class="sresult-desc">Søg "${q}" på ${s.name}</div>
+            </div>
+            <div class="sresult-arrow">›</div>`;
+        sv.appendChild(row);
+    });
+
+    sv.classList.add("show");
+
+    // Open first site immediately on Enter
+}
+
+// SEARCH INPUT
+const si = document.getElementById("si");
+const clrBtn = document.getElementById("clrBtn");
+
+si.addEventListener("input", () => {
+    searchQ = si.value;
+    clrBtn.style.display = searchQ ? "flex" : "none";
+    if (!searchQ.trim()) {
+        renderDefault();
+    } else {
+        doSearch(searchQ);
+    }
+});
+
+si.addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.keyCode === 13) && searchQ.trim()) {
+        si.blur();
+        const sitesToSearch = activeSite === "all" ? SITES : SITES.filter(s => s.id === activeSite);
+        // Open first 3 sites in search
+        const toOpen = activeSite === "all" ? sitesToSearch.slice(0,3) : sitesToSearch;
+        toOpen.forEach((s, i) => {
+            setTimeout(() => {
+                window.open(s.search + encodeURIComponent(searchQ), "_blank", "noopener,noreferrer");
+            }, i * 250);
+        });
+        showToast(`Åbner ${toOpen.length} site(s)...`);
+    }
+});
+
+clrBtn.addEventListener("click", () => {
+    si.value = ""; searchQ = "";
+    clrBtn.style.display = "none";
+    renderDefault();
+    si.focus();
+});
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// INIT
+renderDefault();
+</script>
+</body>
+</html>
